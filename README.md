@@ -1,6 +1,6 @@
-# Google Doogle Challenge
+# Doodle Challenge
 
-A collection of interactive, minimalist Google Doodle-like games built with Vanilla JavaScript, HTML5 Canvas, and pure CSS.
+A collection of interactive, minimalist doodle-like games built with Vanilla JavaScript, HTML5 Canvas, and pure CSS.
 
 ## 🎮 Available Doodles
 

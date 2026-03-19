@@ -61,9 +61,27 @@
             position: absolute; top: 20px; left: 20px;
             font-size: 1.5rem; font-weight: bold; z-index: 5;
         }
+
+        .back-btn {
+            position: absolute; top: 20px; right: 20px;
+            padding: 8px 16px; background: rgba(255, 255, 255, 0.9);
+            color: var(--google-blue); text-decoration: none;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 20;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        #controls-hint {
+            margin-top: 20px; color: #70757a; font-size: 0.9rem;
+            background: white; padding: 8px 16px; border-radius: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
+
+    <a href="../index.html" class="back-btn">← Back to Home</a>
 
     <div id="game-container">
         <div id="score-display">Distance: 0m</div>
@@ -74,6 +92,8 @@
             <p id="final-score" style="margin-top: 10px; display: none;"></p>
         </div>
     </div>
+
+    <div id="controls-hint">Click or Tap to Jump</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -119,11 +139,11 @@
         }
 
         function drawBranding(dt) {
-            brandingTimer += (dt || 16);
+            brandingTimer += dt;
             const alpha = Math.min(1, Math.sin((brandingTimer / BRANDING_DURATION) * Math.PI));
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            const text = "Google";
+            const text = "Doodle";
             const colors = [COLORS.blue, COLORS.red, COLORS.yellow, COLORS.blue, COLORS.green, COLORS.red];
             ctx.font = 'bold 80px Arial'; ctx.textAlign = 'center';
             let totalWidth = 0;
@@ -136,6 +156,7 @@
                 startX += ctx.measureText(text[i]).width;
             }
             ctx.globalAlpha = 1;
+
             if (brandingTimer >= BRANDING_DURATION) {
                 gameState = 'START';
                 uiOverlay.classList.remove('hidden');
@@ -212,6 +233,7 @@
         }
 
         function gameLoop(time) {
+            if (!lastTime) lastTime = time;
             const dt = time - lastTime;
             lastTime = time;
 
@@ -266,7 +288,7 @@
         window.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
         startBtn.addEventListener('click', (e) => { e.stopPropagation(); init(); });
 
-        uiOverlay.classList.add('hidden'); uiOverlay.style.opacity = 0;
+        uiOverlay.classList.add('hidden');
         requestAnimationFrame(gameLoop);
     </script>
 </body>
