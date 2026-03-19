@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doodle Ghost 👻</title>
+    <style>
+        :root {
+            --google-blue: #4285F4;
+            --google-red: #EA4335;
+            --google-yellow: #FBBC05;
+            --google-green: #34A853;
+            --bg-color: #1a0b3b;
+            --text-color: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000;
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 4/3;
+            background-color: var(--bg-color);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(26, 11, 59, 0.9);
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        #ui-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .btn {
+            padding: 12px 32px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background-color: var(--google-blue);
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.95); }
+
+        #score-display {
+            position: absolute;
+            top: 20px; left: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.6);
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score-display">Spirits: 0</div>
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui-overlay">
+            <h1 id="status-title">Doodle Ghost</h1>
+            <button id="start-btn" class="btn">Start Haunting</button>
+            <p id="final-score" style="margin-top: 10px; display: none;"></p>
+        </div>
+
+        <div id="instructions">Drag to move and collect spirits!</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('start-btn');
+        const uiOverlay = document.getElementById('ui-overlay');
+        const scoreDisplay = document.getElementById('score-display');
+        const statusTitle = document.getElementById('status-title');
+        const finalScoreText = document.getElementById('final-score');
+
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 600;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        const COLORS = {
+            blue: '#4285F4',
+            red: '#EA4335',
+            yellow: '#FBBC05',
+            green: '#34A853'
+        };
+
+        let gameState = 'BRANDING';
+        let brandingTimer = 0;
+        const BRANDING_DURATION = 2000;
+
+        let score = 0;
+        let lastTime = 0;
+        let player = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, size: 30 };
+        let targetX = player.x, targetY = player.y;
+        let spirits = [];
+        let enemies = [];
+        let particles = [];
+
+        class Spirit {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * (CANVAS_WIDTH - 60) + 30;
+                this.y = Math.random() * (CANVAS_HEIGHT - 60) + 30;
+                this.size = 8;
+                this.color = Object.values(COLORS)[Math.floor(Math.random() * 4)];
+                this.pulse = 0;
+            }
+            draw() {
+                this.pulse += 0.1;
+                const s = this.size + Math.sin(this.pulse) * 2;
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, s, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Enemy {
+            constructor() {
+                this.x = Math.random() < 0.5 ? -50 : CANVAS_WIDTH + 50;
+                this.y = Math.random() * CANVAS_HEIGHT;
+                this.size = 25;
+                this.speed = 2 + Math.random() * 2 + (score / 15);
+                this.angle = Math.atan2(player.y - this.y, player.x - this.x);
+            }
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - this.size);
+                ctx.lineTo(this.x - this.size, this.y + this.size);
+                ctx.lineTo(this.x + this.size, this.y + this.size);
+                ctx.fill();
+                // Eyes
+                ctx.fillStyle = COLORS.red;
+                ctx.beginPath();
+                ctx.arc(this.x - 5, this.y + 5, 3, 0, Math.PI * 2);
+                ctx.arc(this.x + 5, this.y + 5, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 4 + 1;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8;
+                this.color = color;
+                this.alpha = 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.alpha -= 0.03;
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawBranding(dt) {
+            brandingTimer += (dt || 16);
+            const alpha = Math.min(1, Math.sin((brandingTimer / BRANDING_DURATION) * Math.PI));
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            const text = "Google";
+            const colors = [COLORS.blue, COLORS.red, COLORS.yellow, COLORS.blue, COLORS.green, COLORS.red];
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            let totalWidth = 0;
+            for (let i = 0; i < text.length; i++) totalWidth += ctx.measureText(text[i]).width;
+            let startX = CANVAS_WIDTH / 2 - totalWidth / 2;
+            for (let i = 0; i < text.length; i++) {
+                ctx.fillStyle = colors[i];
+                ctx.globalAlpha = Math.max(0, alpha);
+                ctx.fillText(text[i], startX + ctx.measureText(text[i]).width / 2, CANVAS_HEIGHT / 2);
+                startX += ctx.measureText(text[i]).width;
+            }
+            ctx.globalAlpha = 1;
+            if (brandingTimer >= BRANDING_DURATION) {
+                gameState = 'START';
+                uiOverlay.classList.remove('hidden');
+            }
+        }
+
+        function init() {
+            score = 0;
+            scoreDisplay.textContent = `Spirits: ${score}`;
+            player.x = CANVAS_WIDTH / 2;
+            player.y = CANVAS_HEIGHT / 2;
+            targetX = player.x; targetY = player.y;
+            spirits = [new Spirit(), new Spirit(), new Spirit()];
+            enemies = [];
+            particles = [];
+            gameState = 'PLAYING';
+            uiOverlay.classList.add('hidden');
+            finalScoreText.style.display = 'none';
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            uiOverlay.classList.remove('hidden');
+            statusTitle.textContent = 'Busted!';
+            statusTitle.style.color = COLORS.red;
+            finalScoreText.textContent = `Captured Spirits: ${score}`;
+            finalScoreText.style.display = 'block';
+            startBtn.textContent = 'Haunt Again';
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            // Ghost body
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(0, 0, player.size, Math.PI, 0);
+            ctx.lineTo(player.size, player.size);
+            // Wavy bottom
+            for (let i = 0; i < 3; i++) {
+                const x = player.size - (i * (player.size * 2 / 3));
+                ctx.quadraticCurveTo(x - player.size/3, player.size + 10, x - player.size*2/3, player.size);
+            }
+            ctx.closePath();
+            ctx.fill();
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(-8, -5, 4, 0, Math.PI * 2);
+            ctx.arc(8, -5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function gameLoop(time) {
+            const dt = time - lastTime;
+            lastTime = time;
+
+            if (gameState === 'BRANDING') {
+                drawBranding(dt);
+            } else {
+                ctx.fillStyle = 'rgba(26, 11, 59, 0.4)'; // Slight trail
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                if (gameState === 'PLAYING') {
+                    // Smooth move
+                    player.x += (targetX - player.x) * 0.1;
+                    player.y += (targetY - player.y) * 0.1;
+
+                    spirits.forEach(s => {
+                        s.draw();
+                        const dist = Math.hypot(player.x - s.x, player.y - s.y);
+                        if (dist < player.size + s.size) {
+                            score++;
+                            scoreDisplay.textContent = `Spirits: ${score}`;
+                            for (let i = 0; i < 10; i++) particles.push(new Particle(s.x, s.y, s.color));
+                            s.reset();
+                            if (score % 5 === 0) enemies.push(new Enemy());
+                        }
+                    });
+
+                    enemies.forEach((e, index) => {
+                        e.update();
+                        e.draw();
+                        const dist = Math.hypot(player.x - e.x, player.y - e.y);
+                        if (dist < player.size + e.size - 10) gameOver();
+                        if (e.x < -100 || e.x > CANVAS_WIDTH + 100 || e.y < -100 || e.y > CANVAS_HEIGHT + 100) {
+                            enemies.splice(index, 1);
+                        }
+                    });
+                }
+
+                particles = particles.filter(p => p.alpha > 0);
+                particles.forEach(p => { p.update(); p.draw(); });
+
+                drawPlayer();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            targetX = (e.clientX - rect.left) * (CANVAS_WIDTH / rect.width);
+            targetY = (e.clientY - rect.top) * (CANVAS_HEIGHT / rect.height);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            targetX = (touch.clientX - rect.left) * (CANVAS_WIDTH / rect.width);
+            targetY = (touch.clientY - rect.top) * (CANVAS_HEIGHT / rect.height);
+        });
+
+        startBtn.addEventListener('click', init);
+        uiOverlay.classList.add('hidden'); uiOverlay.style.opacity = 0;
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doodle Cricket 🏏</title>
+    <style>
+        :root {
+            --google-blue: #4285F4;
+            --google-red: #EA4335;
+            --google-yellow: #FBBC05;
+            --google-green: #34A853;
+            --bg-color: #f8f9fa;
+            --text-color: #3c4043;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 4/3;
+            background-color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+
+        #ui-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--google-blue);
+        }
+
+        .btn {
+            padding: 12px 32px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background-color: var(--google-green);
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        #score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+            z-index: 5;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.9rem;
+            color: #70757a;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score-display">Score: 0</div>
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui-overlay">
+            <h1 id="status-title">Doodle Cricket</h1>
+            <button id="start-btn" class="btn">Play Now</button>
+            <p id="final-score" style="margin-top: 10px; display: none;"></p>
+        </div>
+
+        <div id="instructions">Tap or Click to swing!</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('start-btn');
+        const uiOverlay = document.getElementById('ui-overlay');
+        const scoreDisplay = document.getElementById('score-display');
+        const statusTitle = document.getElementById('status-title');
+        const finalScoreText = document.getElementById('final-score');
+
+        // Game Constants
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 600;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        const COLORS = {
+            blue: '#4285F4',
+            red: '#EA4335',
+            yellow: '#FBBC05',
+            green: '#34A853',
+            pitch: '#f1f3f4',
+            grass: '#81c995'
+        };
+
+        // Game State
+        let gameState = 'BRANDING'; // BRANDING, START, PLAYING, GAMEOVER
+        let brandingTimer = 0;
+        const BRANDING_DURATION = 2000; // 2 seconds
+
+        let score = 0;
+        let lastTime = 0;
+        let ball = null;
+        let batX = CANVAS_WIDTH / 2;
+        let batSwingTime = 0;
+        const SWING_DURATION = 250; 
+        const HITTING_Y = CANVAS_HEIGHT - 120;
+        let particles = [];
+        let feedbackText = null;
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 5 + 2;
+                this.speedX = (Math.random() - 0.5) * 10;
+                this.speedY = (Math.random() - 0.5) * 10;
+                this.color = color;
+                this.alpha = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= 0.02;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Ball {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = CANVAS_WIDTH / 2;
+                this.y = 80; 
+                this.size = 8;
+                this.speedY = 4 + (score / 20); 
+                this.speedX = (Math.random() - 0.5) * 1.5;
+                this.active = true;
+                this.hit = false;
+                this.scale = 1;
+            }
+
+            update() {
+                if (!this.active) return;
+                this.y += this.speedY;
+                this.x += this.speedX;
+                this.scale = 0.5 + (this.y / (HITTING_Y + 50)) * 1.5;
+                if (this.y > CANVAS_HEIGHT + 50) {
+                    this.active = false;
+                    if (!this.hit) gameOver();
+                }
+            }
+
+            draw() {
+                if (!this.active) return;
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.beginPath();
+                ctx.ellipse(this.x, this.y + 10 * this.scale, 8 * this.scale, 4 * this.scale, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 8 * this.scale, 0, Math.PI * 2);
+                ctx.fillStyle = COLORS.yellow;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        }
+
+        function drawBranding(dt) {
+            brandingTimer += (dt || 16);
+            const alpha = Math.min(1, Math.sin((brandingTimer / BRANDING_DURATION) * Math.PI));
+            
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            const text = "Google";
+            const colors = [COLORS.blue, COLORS.red, COLORS.yellow, COLORS.blue, COLORS.green, COLORS.red];
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            
+            let totalWidth = 0;
+            for (let i = 0; i < text.length; i++) {
+                totalWidth += ctx.measureText(text[i]).width;
+            }
+
+            let startX = CANVAS_WIDTH / 2 - totalWidth / 2;
+            for (let i = 0; i < text.length; i++) {
+                ctx.fillStyle = colors[i];
+                ctx.globalAlpha = Math.max(0, alpha);
+                ctx.fillText(text[i], startX + ctx.measureText(text[i]).width / 2, CANVAS_HEIGHT / 2);
+                startX += ctx.measureText(text[i]).width;
+            }
+            ctx.globalAlpha = 1;
+
+            if (brandingTimer >= BRANDING_DURATION) {
+                gameState = 'START';
+                uiOverlay.classList.remove('hidden');
+            }
+        }
+
+        function init() {
+            score = 0;
+            scoreDisplay.textContent = `Score: ${score}`;
+            ball = new Ball();
+            gameState = 'PLAYING';
+            uiOverlay.classList.add('hidden');
+            finalScoreText.style.display = 'none';
+            particles = [];
+            feedbackText = null;
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            uiOverlay.classList.remove('hidden');
+            statusTitle.textContent = 'Game Over!';
+            statusTitle.style.color = COLORS.red;
+            finalScoreText.textContent = `Final Score: ${score}`;
+            finalScoreText.style.display = 'block';
+            startBtn.textContent = 'Try Again';
+        }
+
+        function swingBat() {
+            if (gameState !== 'PLAYING') return;
+            const now = Date.now();
+            if (now - batSwingTime < SWING_DURATION + 100) return; 
+            batSwingTime = now;
+            if (ball && ball.active && !ball.hit) {
+                const distY = Math.abs(ball.y - HITTING_Y);
+                const distX = Math.abs(ball.x - batX);
+                if (distY < 60 && distX < 80) {
+                    ball.hit = true;
+                    ball.speedY = -12 - (score / 10);
+                    ball.speedX = (ball.x - batX) * 0.4;
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    for (let i = 0; i < 15; i++) {
+                        particles.push(new Particle(ball.x, ball.y, COLORS.yellow));
+                    }
+                    const isGreat = distY < 20;
+                    feedbackText = {
+                        text: isGreat ? 'GREAT!' : 'HIT!',
+                        x: ball.x,
+                        y: ball.y - 20,
+                        alpha: 1,
+                        color: isGreat ? COLORS.blue : COLORS.green
+                    };
+                    setTimeout(() => {
+                        if (gameState === 'PLAYING') ball.reset();
+                    }, 800);
+                }
+            }
+        }
+
+        function drawBackground() {
+            ctx.fillStyle = COLORS.grass;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            ctx.fillStyle = '#77c38c';
+            for (let i = 0; i < CANVAS_WIDTH; i += 80) {
+                ctx.fillRect(i, 0, 40, CANVAS_HEIGHT);
+            }
+            ctx.fillStyle = COLORS.pitch;
+            ctx.beginPath();
+            ctx.moveTo(CANVAS_WIDTH / 2 - 40, 80);
+            ctx.lineTo(CANVAS_WIDTH / 2 + 40, 80);
+            ctx.lineTo(CANVAS_WIDTH / 2 + 120, CANVAS_HEIGHT);
+            ctx.lineTo(CANVAS_WIDTH / 2 - 120, CANVAS_HEIGHT);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(CANVAS_WIDTH / 2 - 120, HITTING_Y);
+            ctx.lineTo(CANVAS_WIDTH / 2 + 120, HITTING_Y);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.beginPath();
+            ctx.arc(CANVAS_WIDTH / 2, 80, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.font = '30px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🦗', CANVAS_WIDTH / 2, 80);
+        }
+
+        function drawBatter() {
+            const now = Date.now();
+            const elapsed = now - batSwingTime;
+            const isSwinging = elapsed < SWING_DURATION;
+            ctx.save();
+            ctx.translate(batX, HITTING_Y);
+            if (gameState === 'PLAYING' && ball && !ball.hit) {
+                const distY = Math.abs(ball.y - HITTING_Y);
+                if (distY < 60) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 70, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.setLineDash([5, 5]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+            ctx.fillStyle = COLORS.green;
+            ctx.fillRect(-15, 10, 8, 20);
+            ctx.fillRect(7, 10, 8, 20);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 20, 30, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(0, -35, 15, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(-6, -38, 4, 0, Math.PI * 2);
+            ctx.arc(6, -38, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(-6, -38, 2, 0, Math.PI * 2);
+            ctx.arc(6, -38, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.save();
+            if (isSwinging) {
+                const progress = elapsed / SWING_DURATION;
+                const angle = -Math.PI / 4 + Math.sin(progress * Math.PI) * (Math.PI / 1.5);
+                ctx.rotate(angle);
+            } else {
+                ctx.rotate(-Math.PI / 6);
+            }
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(-6, -70, 12, 60);
+            ctx.fillStyle = '#795548';
+            ctx.fillRect(-10, -50, 20, 70);
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function updateFeedbackText() {
+            if (feedbackText) {
+                feedbackText.y -= 1;
+                feedbackText.alpha -= 0.02;
+                if (feedbackText.alpha <= 0) feedbackText = null;
+            }
+        }
+
+        function drawFeedbackText() {
+            if (feedbackText) {
+                ctx.save();
+                ctx.globalAlpha = feedbackText.alpha;
+                ctx.fillStyle = feedbackText.color;
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(feedbackText.text, feedbackText.x, feedbackText.y);
+                ctx.restore();
+            }
+        }
+
+        function gameLoop(time) {
+            const dt = time - lastTime;
+            lastTime = time;
+
+            if (gameState === 'BRANDING') {
+                drawBranding(dt);
+            } else {
+                ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                drawBackground();
+                if (gameState === 'PLAYING') {
+                    ball.update();
+                    ball.draw();
+                }
+                drawBatter();
+                particles = particles.filter(p => p.alpha > 0);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                updateFeedbackText();
+                drawFeedbackText();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Hide overlay initially for branding
+        uiOverlay.classList.add('hidden');
+        uiOverlay.style.opacity = 0;
+
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            init();
+        });
+        
+        window.addEventListener('mousedown', (e) => {
+            if (gameState === 'PLAYING' && e.target.id !== 'start-btn') swingBat();
+        });
+        
+        window.addEventListener('touchstart', (e) => {
+            if (gameState === 'PLAYING' && e.target.id !== 'start-btn') {
+                e.preventDefault();
+                swingBat();
+            }
+        });
+
+        requestAnimationFrame(gameLoop);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Doodle Hurdles 🏃‍♂️</title>
+    <style>
+        :root {
+            --google-blue: #4285F4;
+            --google-red: #EA4335;
+            --google-yellow: #FBBC05;
+            --google-green: #34A853;
+            --bg-color: #e8f0fe;
+            --text-color: #3c4043;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f3f4;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100vh; width: 100vw; overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%; max-width: 800px;
+            aspect-ratio: 16/9;
+            background-color: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 12px; overflow: hidden;
+        }
+
+        canvas { width: 100%; height: 100%; display: block; }
+
+        #ui-overlay {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: 10; transition: opacity 0.3s ease;
+        }
+
+        #ui-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        h1 { font-size: 3rem; margin-bottom: 1rem; color: var(--google-blue); }
+
+        .btn {
+            padding: 12px 32px; font-size: 1.2rem; font-weight: bold;
+            color: white; background-color: var(--google-green);
+            border: none; border-radius: 24px; cursor: pointer;
+        }
+
+        #score-display {
+            position: absolute; top: 20px; left: 20px;
+            font-size: 1.5rem; font-weight: bold; z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score-display">Distance: 0m</div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui-overlay">
+            <h1 id="status-title">Doodle Hurdles</h1>
+            <button id="start-btn" class="btn">Ready, Set, Go!</button>
+            <p id="final-score" style="margin-top: 10px; display: none;"></p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('start-btn');
+        const uiOverlay = document.getElementById('ui-overlay');
+        const scoreDisplay = document.getElementById('score-display');
+        const statusTitle = document.getElementById('status-title');
+        const finalScoreText = document.getElementById('final-score');
+
+        const CANVAS_WIDTH = 1200;
+        const CANVAS_HEIGHT = 450;
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        const COLORS = { blue: '#4285F4', red: '#EA4335', yellow: '#FBBC05', green: '#34A853' };
+
+        let gameState = 'BRANDING';
+        let brandingTimer = 0;
+        const BRANDING_DURATION = 2000;
+
+        let score = 0;
+        let lastTime = 0;
+        let runner = { x: 150, y: 350, vy: 0, gravity: 0.8, jumpPower: -15, isJumping: false, frame: 0 };
+        let hurdles = [];
+        let trackOffset = 0;
+        let speed = 8;
+
+        class Hurdle {
+            constructor(x) {
+                this.x = x;
+                this.y = 350;
+                this.w = 15;
+                this.h = 40;
+                this.color = COLORS.red;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y - this.h, this.w, this.h);
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(this.x, this.y - this.h + 10, this.w, 5);
+            }
+        }
+
+        function drawBranding(dt) {
+            brandingTimer += (dt || 16);
+            const alpha = Math.min(1, Math.sin((brandingTimer / BRANDING_DURATION) * Math.PI));
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            const text = "Google";
+            const colors = [COLORS.blue, COLORS.red, COLORS.yellow, COLORS.blue, COLORS.green, COLORS.red];
+            ctx.font = 'bold 80px Arial'; ctx.textAlign = 'center';
+            let totalWidth = 0;
+            for (let i = 0; i < text.length; i++) totalWidth += ctx.measureText(text[i]).width;
+            let startX = CANVAS_WIDTH / 2 - totalWidth / 2;
+            for (let i = 0; i < text.length; i++) {
+                ctx.fillStyle = colors[i];
+                ctx.globalAlpha = Math.max(0, alpha);
+                ctx.fillText(text[i], startX + ctx.measureText(text[i]).width / 2, CANVAS_HEIGHT / 2);
+                startX += ctx.measureText(text[i]).width;
+            }
+            ctx.globalAlpha = 1;
+            if (brandingTimer >= BRANDING_DURATION) {
+                gameState = 'START';
+                uiOverlay.classList.remove('hidden');
+            }
+        }
+
+        function init() {
+            score = 0; speed = 8;
+            scoreDisplay.textContent = `Distance: 0m`;
+            runner.y = 350; runner.vy = 0; runner.isJumping = false;
+            hurdles = [new Hurdle(CANVAS_WIDTH + 200)];
+            gameState = 'PLAYING';
+            uiOverlay.classList.add('hidden');
+            finalScoreText.style.display = 'none';
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            uiOverlay.classList.remove('hidden');
+            statusTitle.textContent = 'Oops!';
+            statusTitle.style.color = COLORS.red;
+            finalScoreText.textContent = `Total Distance: ${score}m`;
+            finalScoreText.style.display = 'block';
+            startBtn.textContent = 'Race Again';
+        }
+
+        function drawTrack() {
+            // Grass
+            ctx.fillStyle = COLORS.green;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            // Track
+            ctx.fillStyle = '#cc5544'; // Track red
+            ctx.fillRect(0, 300, CANVAS_WIDTH, 100);
+            // Lane lines
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 300); ctx.lineTo(CANVAS_WIDTH, 300);
+            ctx.moveTo(0, 400); ctx.lineTo(CANVAS_WIDTH, 400);
+            ctx.stroke();
+            // Distance markers
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            for(let i = 0; i < 10; i++) {
+                let x = (i * 200 - trackOffset) % (CANVAS_WIDTH + 200);
+                if (x < 0) x += CANVAS_WIDTH + 200;
+                ctx.fillRect(x, 305, 5, 90);
+            }
+        }
+
+        function drawRunner() {
+            runner.frame += 0.15;
+            let bob = runner.isJumping ? 0 : Math.sin(runner.frame) * 5;
+            ctx.save();
+            ctx.translate(runner.x, runner.y + bob);
+            
+            // Character body (Stick-ish person)
+            ctx.fillStyle = COLORS.blue;
+            ctx.fillRect(-10, -40, 20, 35); // Body
+            ctx.beginPath();
+            ctx.arc(0, -50, 10, 0, Math.PI * 2); ctx.fill(); // Head
+            
+            // Legs
+            ctx.strokeStyle = COLORS.blue; ctx.lineWidth = 6;
+            let legAngle = Math.sin(runner.frame) * 0.8;
+            if (runner.isJumping) legAngle = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -5); ctx.lineTo(Math.cos(legAngle + Math.PI/2) * 20, Math.sin(legAngle + Math.PI/2) * 20 - 5);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, -5); ctx.lineTo(Math.cos(-legAngle + Math.PI/2) * 20, Math.sin(-legAngle + Math.PI/2) * 20 - 5);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function gameLoop(time) {
+            const dt = time - lastTime;
+            lastTime = time;
+
+            if (gameState === 'BRANDING') {
+                drawBranding(dt);
+            } else {
+                ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                drawTrack();
+
+                if (gameState === 'PLAYING') {
+                    trackOffset = (trackOffset + speed) % (CANVAS_WIDTH + 200);
+                    score = Math.floor(trackOffset / 10 + (time / 100));
+                    scoreDisplay.textContent = `Distance: ${score}m`;
+                    speed += 0.001;
+
+                    // Runner physics
+                    runner.vy += runner.gravity;
+                    runner.y += runner.vy;
+                    if (runner.y >= 350) {
+                        runner.y = 350; runner.vy = 0; runner.isJumping = false;
+                    }
+
+                    // Hurdles
+                    hurdles.forEach((h, index) => {
+                        h.x -= speed;
+                        h.draw();
+                        // Collision
+                        if (runner.x + 10 > h.x && runner.x - 10 < h.x + h.w && runner.y > h.y - h.h) {
+                            gameOver();
+                        }
+                    });
+
+                    if (hurdles[hurdles.length-1].x < CANVAS_WIDTH - 400) {
+                        hurdles.push(new Hurdle(CANVAS_WIDTH + Math.random() * 300));
+                    }
+                    if (hurdles[0].x < -50) hurdles.shift();
+                }
+
+                drawRunner();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        const jump = () => {
+            if (gameState === 'PLAYING' && !runner.isJumping) {
+                runner.vy = runner.jumpPower;
+                runner.isJumping = true;
+            }
+        };
+
+        window.addEventListener('mousedown', jump);
+        window.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+        startBtn.addEventListener('click', (e) => { e.stopPropagation(); init(); });
+
+        uiOverlay.classList.add('hidden'); uiOverlay.style.opacity = 0;
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
