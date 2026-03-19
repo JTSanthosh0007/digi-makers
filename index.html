@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Doogle Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --google-blue: #4285F4;
+            --google-red: #EA4335;
+            --google-yellow: #FBBC05;
+            --google-green: #34A853;
+            --bg-color: #f8f9fa;
+            --text-color: #3c4043;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-family: 'Product Sans', sans-serif;
+            font-size: 3rem;
+            margin: 0;
+            display: flex;
+            gap: 2px;
+            user-select: none;
+        }
+
+        h1 span:nth-child(1) { color: var(--google-blue); }
+        h1 span:nth-child(2) { color: var(--google-red); }
+        h1 span:nth-child(3) { color: var(--google-yellow); }
+        h1 span:nth-child(4) { color: var(--google-blue); }
+        h1 span:nth-child(5) { color: var(--google-green); }
+        h1 span:nth-child(6) { color: var(--google-red); }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            color: #70757a;
+            margin-top: 10px;
+            font-weight: 300;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 1000px;
+            width: 90%;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .card-title {
+            font-family: 'Product Sans', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            color: #5f6368;
+            line-height: 1.5;
+        }
+
+        .btn {
+            margin-top: 24px;
+            padding: 12px 32px;
+            background-color: var(--google-blue);
+            color: white;
+            border-radius: 24px;
+            font-weight: 500;
+            display: inline-block;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            border: none;
+        }
+
+        .card:hover .btn {
+            background-color: #1a73e8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 40px;
+            color: #70757a;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+            .container { grid-template-columns: 1fr; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+        </h1>
+        <p class="subtitle">Doodle Challenge</p>
+    </header>
+
+    <div class="container">
+        <!-- Cricket Card -->
+        <a href="doodle-cricket/index.html" class="card">
+            <div>
+                <div class="card-icon">🏏</div>
+                <div class="card-title">Doodle Cricket</div>
+                <div class="card-description">Swing the bat and score as many runs as you can in this minimalist cricket game.</div>
+            </div>
+            <div class="btn">Play Now</div>
+        </a>
+
+        <!-- Ghost Card -->
+        <a href="doodle-ghost/index.html" class="card">
+            <div>
+                <div class="card-icon">👻</div>
+                <div class="card-title">Doodle Ghost</div>
+                <div class="card-description">A spooky, interactive interaction perfect for a Halloween vibe.</div>
+            </div>
+            <div class="btn">Play Now</div>
+        </a>
+
+        <!-- Hurdles Card -->
+        <a href="doodle-hurdles/index.html" class="card">
+            <div>
+                <div class="card-icon">🏃</div>
+                <div class="card-title">Doodle Hurdles</div>
+                <div class="card-description">Test your reflexes in this fast-paced race over hurdles.</div>
+            </div>
+            <div class="btn">Play Now</div>
+        </a>
+    </div>
+
+    <footer>
+        Built with ❤️ for the Google Antigravity Challenge
+    </footer>
+</body>
+</html>
