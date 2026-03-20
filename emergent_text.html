@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergent Typography</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <style>
+        /* Anthropic Brand Colors */
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar h1 {
+            font-family: 'Lora', serif;
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--anthropic-dark);
+            margin-bottom: 8px;
+        }
+
+        .sidebar .subtitle {
+            color: var(--anthropic-mid-gray);
+            font-size: 14px;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        .control-section {
+            margin-bottom: 32px;
+        }
+
+        .control-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--anthropic-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-section h3::before {
+            content: '•';
+            color: var(--anthropic-orange);
+            font-weight: bold;
+        }
+
+        .seed-input {
+            width: 100%;
+            background: var(--anthropic-light);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 12px;
+            border: 1px solid var(--anthropic-light-gray);
+            text-align: center;
+        }
+
+        .seed-input:focus {
+            outline: none;
+            border-color: var(--anthropic-orange);
+            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1);
+            background: white;
+        }
+
+        .seed-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .regen-button {
+            margin-bottom: 0;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--anthropic-dark);
+            margin-bottom: 8px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 4px;
+            background: var(--anthropic-light-gray);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--anthropic-orange);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: #c86641;
+        }
+
+        .value-display {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .color-group {
+            margin-bottom: 16px;
+        }
+
+        .color-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+            margin-bottom: 4px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-picker-container input[type="color"] {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        .color-value {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--anthropic-mid-gray);
+        }
+
+        .button {
+            background: var(--anthropic-orange);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .button:hover {
+            background: #c86641;
+            transform: translateY(-1px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.secondary {
+            background: var(--anthropic-blue);
+        }
+
+        .button.secondary:hover {
+            background: #5a8bb8;
+        }
+
+        .button.tertiary {
+            background: var(--anthropic-green);
+        }
+
+        .button.tertiary:hover {
+            background: #6b7b52;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .button-row .button {
+            flex: 1;
+        }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 20px;
+        }
+
+        #canvas-container {
+            width: 100%;
+            max-width: 1000px;
+            padding: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(20, 20, 19, 0.1);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas-container canvas {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--anthropic-mid-gray);
+            height: 600px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .canvas-area {
+                padding: 0;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Control Sidebar -->
+        <div class="sidebar">
+            <h1>Emergent Typography</h1>
+
+            <!-- Seed Section -->
+            <div class="control-section">
+                <h3>Seed</h3>
+                <input type="number" id="seed-input" class="seed-input" value="84724" onchange="updateSeed()">
+                <div class="seed-controls">
+                    <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                    <button class="button secondary" onclick="nextSeed()">Next →</button>
+                </div>
+                <button class="button tertiary regen-button" onclick="randomSeedAndUpdate()">↻ Random</button>
+            </div>
+
+            <!-- Parameters Section -->
+            <div class="control-section">
+                <h3>
+                    <span style="flex: 1;">Parameters</span>
+                    <button style="background: none; border: none; font-size: 1.1rem; cursor: pointer; transition: transform 0.2s;" 
+                            onmouseover="this.style.transform='rotate(45deg)'"
+                            onmouseout="this.style.transform='none'"
+                            onclick="let el = document.getElementById('text-input-group'); el.style.display = el.style.display === 'none' ? 'block' : 'none';"
+                            title="Customize Text">⚙️</button>
+                </h3>
+                <div class="control-group" id="text-input-group" style="display: none; background: rgba(200, 196, 175, 0.2); padding: 12px; border-radius: 8px;">
+                    <label>Displayed Text</label>
+                    <input type="text" id="textInput" class="seed-input" style="margin-bottom: 0;" value="Google"
+                        onchange="updateParamText(this.value)">
+                </div>
+                <div class="control-group">
+                    <label>Particle Count</label>
+                    <div class="slider-container">
+                        <input type="range" id="particleCount" min="1000" max="15000" step="1000" value="8000"
+                            oninput="updateParam('particleCount', this.value)">
+                        <span class="value-display" id="particleCount-value">8000</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Gravity Pull</label>
+                    <div class="slider-container">
+                        <input type="range" id="gravityStrength" min="0.01" max="0.5" step="0.01" value="0.15"
+                            oninput="updateParam('gravityStrength', this.value)">
+                        <span class="value-display" id="gravityStrength-value">0.15</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Noise Strength</label>
+                    <div class="slider-container">
+                        <input type="range" id="noiseStrength" min="0.0" max="3.0" step="0.1" value="1.0"
+                            oninput="updateParam('noiseStrength', this.value)">
+                        <span class="value-display" id="noiseStrength-value">1.0</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Noise Scale</label>
+                    <div class="slider-container">
+                        <input type="range" id="noiseScale" min="0.001" max="0.02" step="0.001" value="0.005"
+                            oninput="updateParam('noiseScale', this.value)">
+                        <span class="value-display" id="noiseScale-value">0.005</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Viscosity (Friction)</label>
+                    <div class="slider-container">
+                        <input type="range" id="friction" min="0.8" max="0.99" step="0.01" value="0.92"
+                            oninput="updateParam('friction', this.value)">
+                        <span class="value-display" id="friction-value">0.92</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colors Section -->
+            <div class="control-section">
+                <h3>Chromatic State Palette</h3>
+                <div class="color-group">
+                    <label>State 0 (G, g)</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color0" value="#4285F4" onchange="updateColor('0', this.value)">
+                        <span class="color-value" id="color0-value">#4285F4</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>State 1 (o, e)</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color1" value="#EA4335" onchange="updateColor('1', this.value)">
+                        <span class="color-value" id="color1-value">#EA4335</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>State 2 (o)</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color2" value="#FBBC05" onchange="updateColor('2', this.value)">
+                        <span class="color-value" id="color2-value">#FBBC05</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>State 3 (l)</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color3" value="#34A853" onchange="updateColor('3', this.value)">
+                        <span class="color-value" id="color3-value">#34A853</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Section -->
+            <div class="control-section">
+                <h3>Actions</h3>
+                <div class="button-row">
+                    <button class="button" onclick="resetParameters()">Reset</button>
+                    <button class="button secondary" onclick="saveCanvasPNG()">Download</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Canvas Area -->
+        <div class="canvas-area">
+            <div id="canvas-container">
+                <div class="loading">Initializing Emergent System...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let params = {
+            seed: 84724,
+            text: "Google",
+            particleCount: 8000,
+            gravityStrength: 0.15,
+            noiseStrength: 1.0,
+            noiseScale: 0.005,
+            friction: 0.92,
+            colorPalette: ['#4285F4', '#EA4335', '#FBBC05', '#34A853']
+        };
+
+        let defaultParams = JSON.parse(JSON.stringify(params));
+
+        let particles = [];
+        let targets = [];
+        let pg;
+
+        function setup() {
+            let canvas = createCanvas(1000, 600);
+            canvas.parent('canvas-container');
+            pixelDensity(1);
+
+            pg = createGraphics(1000, 600);
+            pg.pixelDensity(1);
+
+            initializeSystem();
+            document.querySelector('.loading').style.display = 'none';
+        }
+
+        function initializeSystem() {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+
+            particles = [];
+            targets = [];
+
+            pg.background(255);
+            pg.fill(0);
+            pg.textAlign(CENTER, CENTER);
+            pg.textStyle(BOLD);
+            pg.textFont('"Google Sans", sans-serif');
+            
+            let targetSize = 280;
+            pg.textSize(targetSize);
+            while (pg.textWidth(params.text) > pg.width * 0.85 && targetSize > 20) {
+                targetSize -= 10;
+                pg.textSize(targetSize);
+            }
+            pg.text(params.text, pg.width / 2, pg.height / 2);
+
+            pg.loadPixels();
+
+            let minX = pg.width;
+            let maxX = 0;
+            let tempPoints = [];
+
+            for (let x = 0; x < pg.width; x += 4) {
+                for (let y = 0; y < pg.height; y += 4) {
+                    let index = (x + y * pg.width) * 4;
+                    // Check if it's black text pixel
+                    if (pg.pixels[index] < 128) {
+                        tempPoints.push(createVector(x, y));
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                    }
+                }
+            }
+
+            // Assign targets and specific chromatic identities
+            for (let pt of tempPoints) {
+                let ratio = (pt.x - minX) / (maxX - minX);
+                let colIndex = 0;
+                // Roughly mapping letter positions to colors
+                if (ratio < 0.21) colIndex = 0;       // G -> Blue
+                else if (ratio < 0.39) colIndex = 1;  // o -> Red
+                else if (ratio < 0.57) colIndex = 2;  // o -> Yellow
+                else if (ratio < 0.75) colIndex = 0;  // g -> Blue
+                else if (ratio < 0.82) colIndex = 3;  // l -> Green
+                else colIndex = 1;                    // e -> Red
+
+                targets.push({ pos: pt, colorIndex: colIndex });
+            }
+
+            // Randomly shuffle targets so particles don't map linearly
+            for (let i = targets.length - 1; i > 0; i--) {
+                const j = floor(random(i + 1));
+                [targets[i], targets[j]] = [targets[j], targets[i]];
+            }
+
+            // Safety check
+            if (targets.length === 0) targets.push({ pos: createVector(pg.width / 2, pg.height / 2), colorIndex: 0 });
+
+            // Initialize Particles
+            for (let i = 0; i < params.particleCount; i++) {
+                let safeIndex = i % targets.length;
+                particles.push(new Particle(targets[safeIndex]));
+            }
+
+            background(250, 249, 245);
+        }
+
+        function draw() {
+            background(250, 249, 245, 60); // trail fade
+            let time = millis() * 0.001;
+            for (let p of particles) {
+                p.update(time);
+                p.display();
+            }
+        }
+
+        class Particle {
+            constructor(targetObj) {
+                // Initial pseudo-random spawning points
+                this.pos = createVector(random(width), random(height));
+                this.vel = createVector(0, 0);
+                this.acc = createVector(0, 0);
+
+                // Absolute structural equilibrium target
+                this.target = targetObj.pos.copy();
+                this.colorIndex = targetObj.colorIndex;
+
+                this.maxSpeed = random(2, 6);
+                this.size = random(1.5, 4.0);
+                this.zOffset = random(1000); // 3D offset for perlin noise
+            }
+
+            update(time) {
+                // Seek Force (Gravity towards the typographic attractor)
+                let desired = p5.Vector.sub(this.target, this.pos);
+                let d = desired.mag();
+
+                let speed = this.maxSpeed;
+                if (d < 100) {
+                    speed = map(d, 0, 100, 0, this.maxSpeed);
+                }
+                desired.setMag(speed);
+
+                let steer = p5.Vector.sub(desired, this.vel);
+                steer.mult(params.gravityStrength);
+
+                // Turbulent Noise Force
+                let nx = this.pos.x * params.noiseScale;
+                let ny = this.pos.y * params.noiseScale;
+                let angle = noise(nx, ny, this.zOffset + time * 0.5) * TWO_PI * 4;
+                let noiseForce = p5.Vector.fromAngle(angle);
+
+                noiseForce.mult(params.noiseStrength);
+
+                // Apply forces
+                this.acc.add(steer);
+                this.acc.add(noiseForce);
+
+                // Update position
+                this.vel.add(this.acc);
+                this.vel.mult(params.friction);
+                this.pos.add(this.vel);
+
+                this.acc.mult(0);
+            }
+
+            display() {
+                noStroke();
+                let hexColor = params.colorPalette[this.colorIndex];
+                let c = color(hexColor);
+                c.setAlpha(200);
+                fill(c);
+                circle(this.pos.x, this.pos.y, this.size);
+            }
+        }
+
+        // --- UI Control Functions ---
+
+        function updateParam(paramName, value) {
+            params[paramName] = parseFloat(value);
+            document.getElementById(`${paramName}-value`).textContent = value;
+            if (paramName === 'particleCount') {
+                initializeSystem();
+            }
+        }
+
+        function updateParamText(value) {
+            if (value.trim() === '') value = 'Google';
+            params.text = value;
+            initializeSystem();
+        }
+
+        function updateColor(colorIdx, value) {
+            params.colorPalette[parseInt(colorIdx)] = value;
+            document.getElementById(`color${colorIdx}-value`).textContent = value;
+        }
+
+        // --- Seed Control Functions ---
+
+        function updateSeedDisplay() {
+            document.getElementById('seed-input').value = params.seed;
+        }
+
+        function updateSeed() {
+            let input = document.getElementById('seed-input');
+            let newSeed = parseInt(input.value);
+            if (newSeed && newSeed > 0) {
+                params.seed = newSeed;
+                initializeSystem();
+            } else {
+                updateSeedDisplay();
+            }
+        }
+
+        function previousSeed() {
+            params.seed = Math.max(1, params.seed - 1);
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        function nextSeed() {
+            params.seed = params.seed + 1;
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        function randomSeedAndUpdate() {
+            params.seed = Math.floor(Math.random() * 999999) + 1;
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        function resetParameters() {
+            params = JSON.parse(JSON.stringify(defaultParams));
+
+            document.getElementById('textInput').value = params.text;
+            document.getElementById('particleCount').value = params.particleCount;
+            document.getElementById('particleCount-value').textContent = params.particleCount;
+            document.getElementById('gravityStrength').value = params.gravityStrength;
+            document.getElementById('gravityStrength-value').textContent = params.gravityStrength;
+            document.getElementById('noiseStrength').value = params.noiseStrength;
+            document.getElementById('noiseStrength-value').textContent = params.noiseStrength;
+            document.getElementById('noiseScale').value = params.noiseScale;
+            document.getElementById('noiseScale-value').textContent = params.noiseScale;
+            document.getElementById('friction').value = params.friction;
+            document.getElementById('friction-value').textContent = params.friction;
+
+            document.getElementById('color0').value = params.colorPalette[0];
+            document.getElementById('color0-value').textContent = params.colorPalette[0];
+            document.getElementById('color1').value = params.colorPalette[1];
+            document.getElementById('color1-value').textContent = params.colorPalette[1];
+            document.getElementById('color2').value = params.colorPalette[2];
+            document.getElementById('color2-value').textContent = params.colorPalette[2];
+            document.getElementById('color3').value = params.colorPalette[3];
+            document.getElementById('color3-value').textContent = params.colorPalette[3];
+
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        function saveCanvasPNG() {
+            saveCanvas('emergent-typography-google', 'png');
+        }
+
+        window.addEventListener('load', function () {
+            updateSeedDisplay();
+            if (document.fonts) {
+                document.fonts.ready.then(function() {
+                    initializeSystem();
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
