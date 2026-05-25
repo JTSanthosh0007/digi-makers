@@ -25,4 +25,4 @@ This project follows strict development principles:
 - **Single File Preference**: Doodles are kept as portable single-file implementations whenever possible.
 
 ---
-Built with ❤️ during the Google Antigravity Challenge.
+Built with ❤️
