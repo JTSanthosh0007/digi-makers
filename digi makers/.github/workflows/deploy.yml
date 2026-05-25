@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Agency to GitHub Pages
 
 on:
   push:
@@ -21,11 +21,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: digi makers/agency
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: false
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -35,26 +36,16 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: digi makers/agency/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('digi makers/agency/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Install dependencies
         run: npm ci
-        working-directory: "digi makers/agency"
 
       - name: Build with Next.js
         run: npm run build
-        working-directory: "digi makers/agency"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "digi makers/agency/out"
+          path: ./digi makers/agency/out
 
   deploy:
     environment:
