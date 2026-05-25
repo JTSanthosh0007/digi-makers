@@ -1,12 +1,8 @@
-name: Deploy Next.js Agency Site
+name: GitHub Pages Deployment
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'digi makers/agency/**'
-      - '.github/workflows/deploy.yml'
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -21,26 +17,34 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agency
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Configure GitHub Pages
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: 'npm'
+          cache-dependency-path: agency/package-lock.json
+      
+      - name: Setup Pages
         uses: actions/configure-pages@v5
-
-      - name: Install Node.js dependencies
+      
+      - name: Install dependencies
         run: npm ci
-        working-directory: digi makers/agency
-
-      - name: Build Next.js application
+      
+      - name: Build with Next.js
         run: npm run build
-        working-directory: digi makers/agency
-
-      - name: Upload build artifact
+      
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./digi makers/agency/out
-
+          path: agency/out
+  
   deploy:
     environment:
       name: github-pages
