@@ -92,7 +92,14 @@ export default function Footer() {
               className="flex items-center gap-3 px-8 py-4 bg-black text-white border border-white/20 font-black uppercase text-xs tracking-widest rounded-full hover:bg-white hover:text-black hover:scale-105 transition-all duration-300 shadow-xl"
             >
               <Phone size={16} />
-              +91 9036639525
+              +91 90366 39525
+            </a>
+            <a
+              href="tel:+918884803048"
+              className="flex items-center gap-3 px-8 py-4 bg-black text-white border border-white/20 font-black uppercase text-xs tracking-widest rounded-full hover:bg-white hover:text-black hover:scale-105 transition-all duration-300 shadow-xl"
+            >
+              <Phone size={16} />
+              +91 88848 03048
             </a>
           </motion.div>
         </div>
@@ -104,8 +111,15 @@ export default function Footer() {
           {/* Brand Info */}
           <div className="md:col-span-6 flex flex-col justify-between">
             <div>
-              <Link href="#home" className="text-2xl font-black tracking-[0.2em] text-white select-none">
-                DIGI MAKER
+              <Link href="#home" className="flex items-center gap-3 select-none mb-4 h-12">
+                <Image
+                  src="/digi-makers/logo.png"
+                  alt="DIGI MAKER"
+                  width={200}
+                  height={60}
+                  className="h-full w-auto object-contain"
+                  style={{ mixBlendMode: "screen" }}
+                />
               </Link>
               <p className="text-gray-500 text-sm max-w-sm mt-4 leading-relaxed">
                 Bengaluru's top creative & marketing agency building systems that scale modern brands through content, performance, and strategy.

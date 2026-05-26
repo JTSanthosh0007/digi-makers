@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -42,6 +43,22 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Top Left Logo Image */}
+      <div className="fixed top-0 left-0 z-50 p-6 pointer-events-none hidden md:block">
+        <div className="pointer-events-auto bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/5 flex items-center justify-center h-10">
+          <Link href="#home" className="flex items-center select-none h-full">
+            <Image
+              src="/digi-makers/logo.png"
+              alt="DIGI MAKER Logo"
+              width={80}
+              height={30}
+              className="h-full w-auto object-contain"
+              style={{ mixBlendMode: "screen" }}
+            />
+          </Link>
+        </div>
+      </div>
+
       {/* Top Center Logo */}
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center py-6 pointer-events-none">
         <div className="pointer-events-auto bg-black/20 backdrop-blur-sm px-6 py-2 rounded-full border border-white/5">
