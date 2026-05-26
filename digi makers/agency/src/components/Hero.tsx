@@ -1,110 +1,149 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 export default function Hero() {
-  return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background Gradients */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#FFD700] rounded-full mix-blend-screen filter blur-[150px] opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-[#B39700] rounded-full mix-blend-screen filter blur-[200px] opacity-20"></div>
+  const targetRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ["start start", "end start"],
+  });
 
-      <div className="container mx-auto px-6 relative z-10 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="inline-block mb-4 px-4 py-1.5 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/5 backdrop-blur-md"
+  // Parallax translations for left and right image columns
+  const leftY = useTransform(scrollYProgress, [0, 1], ["0px", "-200px"]);
+  const rightY = useTransform(scrollYProgress, [0, 1], ["0px", "200px"]);
+  
+  // Fade out text as scroll progress increases
+  const opacityText = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  return (
+    <section
+      id="home"
+      ref={targetRef}
+      className="relative min-h-screen flex items-center justify-center bg-[#ff2731] overflow-hidden py-32"
+    >
+      {/* Decorative subtle background overlay grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+
+      <div className="container mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* Left Column of Floating Images (Parallax Up) */}
+        <motion.div 
+          style={{ y: leftY }}
+          className="hidden lg:flex lg:col-span-3 flex-col gap-8 pointer-events-none select-none"
         >
-          <span className="text-sm font-medium text-[#FFD700] tracking-wide uppercase">
-            Award Winning Digital Agency
-          </span>
+          <div className="relative w-full h-[280px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 rotate-[-4deg]">
+            <Image
+              src="/digi-makers/brand_strategy.png"
+              alt="Brand & Strategy Mockup"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 30vw"
+              priority
+            />
+          </div>
+          <div className="relative w-full h-[280px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 rotate-[2deg] translate-x-4">
+            <Image
+              src="/digi-makers/creative_content.png"
+              alt="Creative & Content Mockup"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 30vw"
+              priority
+            />
+          </div>
         </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter mb-8 leading-[1.1]"
+        {/* Center Typography & Copy Column */}
+        <motion.div 
+          style={{ opacity: opacityText }}
+          className="lg:col-span-6 text-center flex flex-col items-center justify-center"
         >
-          <span className="block text-white">DESIGN</span>
-          <span className="block text-gradient-yellow">THE FUTURE.</span>
-        </motion.h1>
+          {/* Stacked Heading */}
+          <div className="flex flex-col items-center leading-[0.8] mb-10 select-none">
+            <motion.h1 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="text-7xl sm:text-8xl md:text-9xl font-black text-white tracking-tighter"
+            >
+              WE THINK
+            </motion.h1>
+            <motion.h1 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="text-7xl sm:text-8xl md:text-9xl font-black text-white/40 tracking-tighter my-2"
+            >
+              WE CREATE
+            </motion.h1>
+            <motion.h1 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="text-7xl sm:text-8xl md:text-9xl font-black text-white tracking-tighter"
+            >
+              DIGIMAKER
+            </motion.h1>
+          </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 font-light"
-        >
-          We craft premium, immersive digital experiences that elevate brands to new heights. Minimal, cinematic, and engineered for impact.
-        </motion.p>
+          {/* Subheading text */}
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.45 }}
+            className="text-white text-base md:text-lg max-w-lg mb-12 font-medium leading-relaxed tracking-wide"
+          >
+            A 360° Marketing & Growth Studio. We turn brand identity into measurable impact through strategy, content, digital performance, and scalable marketing systems.
+          </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-6"
+          {/* Button CTA */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <Link
+              href="#contact"
+              className="px-10 py-5 rounded-full bg-black text-white text-sm font-black tracking-widest uppercase hover:bg-white hover:text-black hover:scale-105 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.5)] border border-transparent hover:border-black"
+            >
+              Book Strategy Call
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* Right Column of Floating Images (Parallax Down) */}
+        <motion.div 
+          style={{ y: rightY }}
+          className="hidden lg:flex lg:col-span-3 flex-col gap-8 pointer-events-none select-none"
         >
-          <Link
-            href="#contact"
-            className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full bg-[#FFD700] px-8 font-medium text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,215,0,0.4)] w-full sm:w-auto"
-          >
-            <span className="mr-2 text-lg font-semibold">Start Project</span>
-            <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" size={20} />
-          </Link>
-          
-          <Link
-            href="#work"
-            className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/5 px-8 font-medium text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:border-white/40 w-full sm:w-auto"
-          >
-            <span className="text-lg">View Work</span>
-          </Link>
+          <div className="relative w-full h-[280px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 rotate-[3deg] -translate-x-4">
+            <Image
+              src="/digi-makers/content_growth.png"
+              alt="Content & Growth Mockup"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 30vw"
+              priority
+            />
+          </div>
+          <div className="relative w-full h-[280px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 rotate-[-2deg]">
+            <Image
+              src="/digi-makers/activation_influence.png"
+              alt="Activation & Influence Mockup"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 30vw"
+              priority
+            />
+          </div>
         </motion.div>
       </div>
 
-      {/* Floating Elements */}
-      <FloatingElement delay={0} x={-20} y={-30} size="w-32 h-32" className="top-1/4 left-10 md:left-32 border-[#FFD700]/20" />
-      <FloatingElement delay={1} x={30} y={20} size="w-24 h-24" className="bottom-1/3 right-10 md:right-32 border-white/10" />
-      <FloatingElement delay={2} x={-10} y={40} size="w-16 h-16" className="top-1/3 right-1/4 border-[#FFD700]/30" />
-      
-      {/* Scroll Indicator */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-      >
-        <span className="text-xs text-gray-500 uppercase tracking-widest">Scroll</span>
-        <div className="w-[1px] h-12 bg-white/20 overflow-hidden">
-          <motion.div 
-            animate={{ y: [0, 48, 0] }} 
-            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-            className="w-full h-1/2 bg-[#FFD700]"
-          />
-        </div>
-      </motion.div>
+      {/* Dynamic bottom transition shape */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent pointer-events-none" />
     </section>
-  );
-}
-
-function FloatingElement({ delay, x, y, size, className }: { delay: number, x: number, y: number, size: string, className: string }) {
-  return (
-    <motion.div
-      animate={{
-        y: [0, y, 0],
-        x: [0, x, 0],
-        rotate: [0, 10, -10, 0],
-      }}
-      transition={{
-        duration: 8,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: delay,
-      }}
-      className={`absolute ${size} rounded-3xl glass rotate-12 -z-10 ${className}`}
-    />
   );
 }

@@ -1,121 +1,135 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PenTool, Layout, Code, Smartphone, Share2, Cpu } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
 const services = [
   {
-    icon: <PenTool size={32} />,
-    title: "Branding",
-    description: "Creating memorable brand identities that resonate with your audience and stand the test of time.",
+    title: "Brand & Strategy",
+    description:
+      "Branding and strategy define your positioning, refine your messaging, and create a clear roadmap for sustainable growth and competitive advantage.",
+    image: "/digi-makers/brand_strategy.png",
+    link: "#contact",
   },
   {
-    icon: <Layout size={32} />,
-    title: "UI/UX Design",
-    description: "Designing intuitive, beautiful, and user-centric interfaces that elevate the digital experience.",
+    title: "Creative & Content",
+    description:
+      "We create high-impact visuals and strategic content that strengthen brand identity, engage audiences, and drive measurable marketing results across digital platforms.",
+    image: "/digi-makers/creative_content.png",
+    link: "#contact",
   },
   {
-    icon: <Code size={32} />,
-    title: "Web Development",
-    description: "Building high-performance, scalable, and secure web applications using cutting-edge technologies.",
+    title: "Content & Growth",
+    description:
+      "We build data-driven content strategies and performance marketing systems that increase visibility, generate leads, and optimise conversions turning audience attention into business growth.",
+    image: "/digi-makers/content_growth.png",
+    link: "#contact",
   },
   {
-    icon: <Smartphone size={32} />,
-    title: "Mobile App Development",
-    description: "Crafting seamless native and cross-platform mobile experiences for iOS and Android.",
-  },
-  {
-    icon: <Share2 size={32} />,
-    title: "Social Media Marketing",
-    description: "Data-driven marketing campaigns that amplify your brand's voice and drive conversions.",
-  },
-  {
-    icon: <Cpu size={32} />,
-    title: "AI Automation",
-    description: "Implementing intelligent AI solutions to streamline operations and unlock new possibilities.",
+    title: "Activation & Influence",
+    description:
+      "We drive reach and engagement through strategic activations and influencer marketing that strengthen brand presence and accelerate growth.",
+    image: "/digi-makers/activation_influence.png",
+    link: "#contact",
   },
 ];
 
-const container = {
-  hidden: { opacity: 0 },
+const containerVariants = {
+  hidden: {},
   show: {
-    opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.15,
     },
   },
 };
 
-const item = {
-  hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+const cardVariants = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export default function Services() {
   return (
-    <section id="services" className="py-32 relative">
-      <div className="absolute top-1/2 left-0 w-96 h-96 bg-[#FFD700] opacity-5 blur-[150px] rounded-full pointer-events-none -translate-y-1/2"></div>
-      
+    <section id="services" className="py-32 bg-black relative overflow-hidden">
+      {/* Huge floating letters background */}
+      <div className="absolute inset-x-0 top-10 pointer-events-none select-none overflow-hidden opacity-5 flex justify-center">
+        <h1 className="text-[12rem] md:text-[20rem] font-black tracking-widest text-white leading-none font-sans">
+          SERVICES
+        </h1>
+      </div>
+
       <div className="container mx-auto px-6 md:px-12 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <motion.h2 
+        <div className="max-w-3xl mb-24">
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-sm text-[#FFD700] uppercase tracking-widest font-bold mb-4"
+            className="text-xs text-[#ff2731] uppercase tracking-[0.2em] font-bold mb-6"
           >
-            Our Expertise
+            OUR CAPABILITIES
           </motion.h2>
-          <motion.h3 
+          <motion.h3
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold tracking-tighter mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-white"
           >
-            Capabilities that drive <span className="text-gradient-yellow">results.</span>
+            Tailored Marketing & <br />
+            Growth Solutions.
           </motion.h3>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-gray-400 text-lg"
-          >
-            A comprehensive suite of services designed to transform your digital presence and accelerate growth.
-          </motion.p>
         </div>
 
-        <motion.div 
-          variants={container}
+        <motion.div
+          variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
         >
           {services.map((service, index) => (
-            <motion.div key={index} variants={item} className="group relative">
-              {/* Gradient border wrapper */}
-              <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-b from-white/10 to-white/5 opacity-100 group-hover:from-[#FFD700]/50 group-hover:to-transparent transition-all duration-500 z-0"></div>
-              
-              <div className="relative h-full bg-[#0f0f0f] rounded-3xl p-8 z-10 overflow-hidden transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-15px_rgba(255,215,0,0.15)]">
-                {/* Background glow on hover */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#FFD700] opacity-0 group-hover:opacity-10 blur-[50px] transition-opacity duration-500 rounded-full translate-x-1/2 -translate-y-1/2"></div>
-                
-                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white mb-8 group-hover:bg-[#FFD700]/10 group-hover:text-[#FFD700] group-hover:border-[#FFD700]/30 transition-all duration-500 relative">
-                  {/* Floating effect for icon */}
-                  <div className="group-hover:animate-bounce-slow">
-                    {service.icon}
-                  </div>
+            <motion.div
+              key={index}
+              variants={cardVariants}
+              className="group bg-[#161616] border border-white/5 hover:border-[#ff2731]/30 rounded-3xl overflow-hidden flex flex-col md:flex-row transition-all duration-500 hover:shadow-[0_20px_50px_rgba(255,39,49,0.08)]"
+            >
+              {/* Image Column */}
+              <div className="relative w-full md:w-2/5 h-64 md:h-auto overflow-hidden">
+                <Image
+                  src={service.image}
+                  alt={service.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  sizes="(max-width: 768px) 100vw, 20vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/20 via-transparent to-[#161616]/50" />
+              </div>
+
+              {/* Text Content Column */}
+              <div className="w-full md:w-3/5 p-8 md:p-10 flex flex-col justify-between">
+                <div>
+                  <h4 className="text-2xl font-black text-white mb-4 group-hover:text-[#ff2731] transition-colors duration-300">
+                    {service.title}
+                  </h4>
+                  <p className="text-gray-400 text-sm leading-relaxed mb-8">
+                    {service.description}
+                  </p>
                 </div>
-                
-                <h4 className="text-2xl font-bold text-white mb-4 group-hover:text-[#FFD700] transition-colors">{service.title}</h4>
-                <p className="text-gray-400 leading-relaxed">
-                  {service.description}
-                </p>
-                
-                {/* Animated line */}
-                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#FFD700] to-transparent w-0 group-hover:w-full transition-all duration-700 ease-out"></div>
+
+                <div>
+                  <Link
+                    href={service.link}
+                    className="inline-flex items-center gap-2 text-xs font-black tracking-wider uppercase text-white group-hover:text-[#ff2731] transition-colors duration-300"
+                  >
+                    Learn More
+                    <ArrowUpRight
+                      size={14}
+                      className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"
+                    />
+                  </Link>
+                </div>
               </div>
             </motion.div>
           ))}

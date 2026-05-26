@@ -1,0 +1,43 @@
+# WeAre Studios Design Specifications
+
+## Typography
+- **Primary Font Family:** `Inter, sans-serif` (loaded via Google Web Fonts, weights 300, 400, 500, 600, 700).
+- **Secondary Display Font:** Custom Roma display font (simulated with bold modern sans-serif uppercase tracking-tighter/stretch).
+
+## Color System (HEX Codes)
+- **Primary Red / Bright Highlight:** `#ff2731`
+- **Secondary Deep Navy / Black:** `#00050d`
+- **Solid Black Background:** `#000000`
+- **Solid White:** `#ffffff`
+- **Light Gray (Borders / Navbar Active):** `#e7e7e9`
+- **Dark Gray (Muted Text):** `#999999`
+- **Lighter Black:** `#161616`
+- **Subtle Glass Border:** `#ffffff0d` (semi-transparent white)
+
+## Page Layout & Sections (Home Page)
+1. **Top Center Logo:** Fixed at top middle, transparent background, white text/symbol logo.
+2. **Hero Section (Vibrant Red background `#ff2731`):**
+   - Main header: Large block uppercase words: "WE THINK", "WE CREATE", "WEARE".
+   - Subheading text: "A 360° Marketing & Growth Studio..."
+   - Left and right columns of floating image/graphics cards that translate vertically on scroll.
+   - Button: "Book Strategy Call" with dark background `#000` and white text.
+3. **Floating Bottom Navbar:**
+   - Centered pill-shaped navbar at the bottom of the viewport.
+   - Backdrop filter blur (`2rem`), background `#ffffff05`, border `1px solid #ffffff0d`.
+   - Links: "HOME", "ABOUT", "CONTACT", "MORE ⌵".
+   - Active link uses `#e7e7e9` background pill with `#ff2731` text color.
+4. **Trusted Brands Carousel (Black background `#000000`):**
+   - Continuously moving marquee with black cards showing client logos.
+5. **Services Section (Black background `#000000`):**
+   - Huge decorative outline/solid "SERVICES" letters that animate or float.
+   - 4-column or grid layout showcasing:
+     - Brand & Strategy
+     - Creative & Content
+     - Content & Growth
+     - Activation & Influence
+6. **Stats Section ("Growth That Compounds"):**
+   - Dynamic counter numbers "10" and "8" that increment/reveal mechanically on scroll.
+7. **Footer / Say Hello:**
+   - Heading: "Say Hello!"
+   - Subtext: "Tell us your goals — we’ll build the growth engine behind them."
+   - Contact links, follow icons, and copyright details.
